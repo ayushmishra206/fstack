@@ -1,28 +1,4 @@
-import React, { useState } from "react";
-import { gql, useMutation } from "@apollo/client";
-
-const REGISTER = gql`
-  mutation Register($name: String!, $email: String!, $password: String!) {
-    register(name: $name, email: $email, password: $password) {
-      id
-      name
-      email
-    }
-  }
-`;
-
-const LOGIN = gql`
-  mutation Login($email: String!, $password: String!) {
-    login(email: $email, password: $password) {
-      token
-      user {
-        id
-        name
-        email
-      }
-    }
-  }
-`;
+import React, { useState, useEffect } from "react";
 
 export default function AuthForm({ onLogin }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -30,26 +6,48 @@ export default function AuthForm({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [users, setUsers] = useState([]);
 
-  const [register, { loading: regLoading }] = useMutation(REGISTER);
-  const [login, { loading: loginLoading }] = useMutation(LOGIN);
+  // Load users from users.json or localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem('users');
+    if (stored) {
+      setUsers(JSON.parse(stored));
+    } else {
+      fetch('/users.json')
+        .then(res => res.json())
+        .then(data => setUsers(data));
+    }
+  }, []);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
-    try {
-      if (isLogin) {
-        const { data } = await login({ variables: { email, password } });
-        onLogin(data.login.token, data.login.user);
+    if (isLogin) {
+      const user = users.find(u => u.email === email && u.password === password);
+      if (user) {
+        onLogin("dummy-token", { id: user.id, name: user.name, email: user.email });
       } else {
-        await register({ variables: { name, email, password } });
-        setIsLogin(true);
+        setError("Invalid email or password");
       }
+    } else {
+      if (users.find(u => u.email === email)) {
+        setError("Email already exists");
+        return;
+      }
+      const newUser = {
+        id: (users.length + 1).toString(),
+        name,
+        email,
+        password
+      };
+      const updatedUsers = [...users, newUser];
+      setUsers(updatedUsers);
+      localStorage.setItem('users', JSON.stringify(updatedUsers));
+      setIsLogin(true);
       setName('');
       setEmail('');
       setPassword('');
-    } catch (err) {
-      setError(err.message.replace('GraphQL error: ', ''));
     }
   };
 
@@ -88,9 +86,8 @@ export default function AuthForm({ onLogin }) {
         <button
           className="bg-blue-600 text-white p-2 rounded w-full hover:bg-blue-700 transition font-semibold shadow"
           type="submit"
-          disabled={regLoading || loginLoading}
         >
-          {isLogin ? (loginLoading ? 'Logging in...' : 'Login') : (regLoading ? 'Registering...' : 'Register')}
+          {isLogin ? 'Login' : 'Register'}
         </button>
         {error && <p className="text-red-500 text-center">{error}</p>}
       </form>

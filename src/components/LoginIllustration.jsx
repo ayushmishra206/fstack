@@ -4,7 +4,7 @@ export default function LoginIllustration() {
   return (
     <div className="hidden md:flex flex-col justify-center items-center w-1/2 bg-blue-100 p-8">
       <img
-        src="/user.svg" // Place your image in /public or use a URL
+        src="/user.svg"
         alt="Welcome"
         className="w-80 h-80 object-contain"
       />
