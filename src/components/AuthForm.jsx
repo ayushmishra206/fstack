@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 export default function AuthForm({ onLogin }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -6,48 +6,35 @@ export default function AuthForm({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [users, setUsers] = useState([]);
 
-  // Load users from users.json or localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem('users');
-    if (stored) {
-      setUsers(JSON.parse(stored));
-    } else {
-      fetch('/users.json')
-        .then(res => res.json())
-        .then(data => setUsers(data));
-    }
-  }, []);
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (isLogin) {
-      const user = users.find(u => u.email === email && u.password === password);
-      if (user) {
-        onLogin("dummy-token", { id: user.id, name: user.name, email: user.email });
+    try {
+      if (isLogin) {
+        const res = await fetch("http://localhost:5000/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Login failed");
+        onLogin("dummy-token", data); // You can implement JWT later
       } else {
-        setError("Invalid email or password");
+        const res = await fetch("http://localhost:5000/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Registration failed");
+        setIsLogin(true);
       }
-    } else {
-      if (users.find(u => u.email === email)) {
-        setError("Email already exists");
-        return;
-      }
-      const newUser = {
-        id: (users.length + 1).toString(),
-        name,
-        email,
-        password
-      };
-      const updatedUsers = [...users, newUser];
-      setUsers(updatedUsers);
-      localStorage.setItem('users', JSON.stringify(updatedUsers));
-      setIsLogin(true);
       setName('');
       setEmail('');
       setPassword('');
+    } catch (err) {
+      setError(err.message);
     }
   };
 

@@ -6,20 +6,21 @@ export default function Profile({ user, onUpdate }) {
   const [avatar, setAvatar] = useState(user.avatar || "");
   const [message, setMessage] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const updatedUser = { ...user, name, bio, avatar };
-    // Update user in localStorage
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-    // Also update in users array if present
-    const users = JSON.parse(localStorage.getItem('users') || "[]");
-    const idx = users.findIndex(u => u.id === user.id);
-    if (idx !== -1) {
-      users[idx] = { ...users[idx], name, bio, avatar };
-      localStorage.setItem('users', JSON.stringify(users));
+    try {
+      const res = await fetch(`http://localhost:5000/api/profile/${user.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, bio, avatar }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Update failed");
+      setMessage("Profile updated!");
+      onUpdate(data);
+    } catch (err) {
+      setMessage(err.message);
     }
-    setMessage("Profile updated!");
-    onUpdate(updatedUser);
   };
 
   return (
