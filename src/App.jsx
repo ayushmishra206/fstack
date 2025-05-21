@@ -1,8 +1,7 @@
-import { ApolloProvider } from '@apollo/client';
 import { useState, useEffect } from 'react';
-import client from './apolloClient';
 import Dashboard from './components/Dashboard';
 import AuthForm from './components/AuthForm';
+import LoginIllustration from './components/LoginIllustration';
 
 function App() {
   const [token, setToken] = useState('');
@@ -31,13 +30,16 @@ function App() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-blue-200">
-      <ApolloProvider client={client}>
-        {token && user ? (
-          <Dashboard user={user} onLogout={handleLogout} />
-        ) : (
-          <AuthForm onLogin={handleLogin} />
-        )}
-      </ApolloProvider>
+      {token && user ? (
+        <Dashboard user={user} onLogout={handleLogout} />
+      ) : (
+        <div className="flex w-full max-w-4xl bg-white/80 rounded-xl shadow-xl overflow-hidden">
+          <LoginIllustration />
+          <div className="flex-1 flex items-center justify-center p-8">
+            <AuthForm onLogin={handleLogin} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
