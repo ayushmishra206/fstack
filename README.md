@@ -1,12 +1,112 @@
-# React + Vite
+# Fstack - A Social Media Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Current State
+The project is a full-stack application with:
 
-Currently, two official plugins are available:
+### Backend
+- Node.js + Express server
+- PostgreSQL database with Prisma ORM
+- User authentication (register/login)
+- Profile management
+- REST API endpoints
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Frontend
+- React + Vite for UI
+- Tailwind CSS for styling
+- React Router for navigation
+- Responsive design
+- Authentication forms
+- Profile editing
 
-## Expanding the ESLint configuration
+### Development Tools
+- Concurrent development servers (frontend + backend)
+- Hot reload support
+- Prisma Studio for database management
+- ESLint for code quality
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Planned Features
+
+### Core Features
+- [ ] News feed with posts
+- [ ] Create and edit posts
+- [ ] Like and comment system
+- [ ] Follow/unfollow users
+- [ ] User profiles with posts and stats
+
+### Enhanced Social Features
+- [ ] Image uploads for posts
+- [ ] User mentions (@username)
+- [ ] Post sharing
+- [ ] Hashtag support
+- [ ] Direct messaging
+
+### Technical Roadmap
+- [ ] Password hashing (bcrypt)
+- [ ] JWT authentication
+- [ ] File upload system
+- [ ] Real-time updates
+- [ ] Feed pagination
+- [ ] Search functionality
+
+## Setup & Development
+
+### Prerequisites
+- Node.js (v18+)
+- PostgreSQL
+- npm or yarn
+
+### Installation
+1. Clone and install dependencies:
+```bash
+git clone <repository-url>
+cd fstack
+npm install
+```
+
+2. Set up database:
+```bash
+cd server
+npx prisma migrate dev
+```
+
+3. Start development servers:
+```bash
+npm run dev
+```
+
+### Available Scripts
+- `npm run dev` - Start frontend & backend
+- `npm run dev:fe` - Frontend only
+- `npm run dev:be` - Backend only
+- `npm run build` - Production build
+- `npm run preview` - Preview build
+
+### Database Management
+Launch Prisma Studio:
+```bash
+npx prisma studio
+```
+Access at http://localhost:5555
+
+## Project Structure
+```
+fstack/
+├── src/              # Frontend React code
+│   ├── components/   # React components
+│   ├── App.jsx      # Main React component
+│   └── main.jsx     # Entry point
+├── server/          # Backend
+│   ├── src/         # Express server code
+│   └── prisma/      # Database schema & migrations
+└── public/          # Static assets
+```
+
+## Contributing
+1. Fork the repository
+2. Create feature branch
+3. Commit changes
+4. Push to branch
+5. Open Pull Request
+
+## License
+MIT
