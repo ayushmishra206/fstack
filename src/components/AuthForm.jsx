@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { API_URL } from '../utils/config';
 
 export default function AuthForm({ onLogin }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -10,18 +11,29 @@ export default function AuthForm({ onLogin }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
     try {
+      const baseUrl = API_URL;
+      console.log('Using API URL:', baseUrl); // Debug log
+      
       if (isLogin) {
-        const res = await fetch("http://localhost:5000/api/login", {
+        const res = await fetch(`${baseUrl}/api/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
         });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || 'Login failed');
+        }
+
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Login failed");
-        onLogin("dummy-token", data); // You can implement JWT later
+        onLogin(data.user);
+        setEmail('');
+        setPassword('');
       } else {
-        const res = await fetch("http://localhost:5000/api/register", {
+        const res = await fetch(`${API_URL}/api/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, email, password }),
@@ -34,7 +46,8 @@ export default function AuthForm({ onLogin }) {
       setEmail('');
       setPassword('');
     } catch (err) {
-      setError(err.message);
+      console.error('Auth error:', err, 'API_URL:', API_URL);
+      setError(err.message || 'Authentication failed');
     }
   };
 

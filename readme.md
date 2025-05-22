@@ -1,70 +1,112 @@
-# Fstack App
+# Fstack - A Social Media Platform
 
-This project is a full-stack application featuring:
-- A **GraphQL backend** (Node.js, Apollo Server, JWT authentication, bcrypt)
-- A **React frontend** (Vite, Apollo Client, Tailwind CSS)
-
-## Project Structure
-
-```
-/graphql-backend   # Node.js GraphQL API
-/tail-manage       # React frontend (Vite + Tailwind)
-```
-
-## Getting Started
+## Current State
+The project is a full-stack application with:
 
 ### Backend
-
-1. **Install dependencies:**
-   ```sh
-   cd graphql-backend
-   npm install
-   ```
-
-2. **Set up environment variables:**
-   - Create a `.env` file in `/graphql-backend`:
-     ```
-     JWT_SECRET=your-very-secret-key
-     ```
-
-3. **Start the backend (with auto-reload):**
-   ```sh
-   npm run dev
-   ```
-   *(Requires `nodemon` in your devDependencies)*
+- Node.js + Express server
+- PostgreSQL database with Prisma ORM
+- User authentication (register/login)
+- Profile management
+- REST API endpoints
 
 ### Frontend
+- React + Vite for UI
+- Tailwind CSS for styling
+- React Router for navigation
+- Responsive design
+- Authentication forms
+- Profile editing
 
-1. **Install dependencies:**
-   ```sh
-   cd tail-manage
-   npm install
-   ```
+### Development Tools
+- Concurrent development servers (frontend + backend)
+- Hot reload support
+- Prisma Studio for database management
+- ESLint for code quality
 
-2. **Start the frontend:**
-   ```sh
-   npm run dev
-   ```
+## Planned Features
 
-3. **Open your browser:**  
-   Visit [http://localhost:5173](http://localhost:5173) (or the port Vite shows).
+### Core Features
+- [ ] News feed with posts
+- [ ] Create and edit posts
+- [ ] Like and comment system
+- [ ] Follow/unfollow users
+- [ ] User profiles with posts and stats
 
-## Features
+### Enhanced Social Features
+- [ ] Image uploads for posts
+- [ ] User mentions (@username)
+- [ ] Post sharing
+- [ ] Hashtag support
+- [ ] Direct messaging
 
-- **Register & Login** with JWT authentication
-- **GraphQL API** for user management
-- **Styled with Tailwind CSS**
-- **Hot reload** for both frontend and backend
+### Technical Roadmap
+- [ ] Password hashing (bcrypt)
+- [ ] JWT authentication
+- [ ] File upload system
+- [ ] Real-time updates
+- [ ] Feed pagination
+- [ ] Search functionality
 
-## Development
+## Setup & Development
 
-- Backend changes auto-reload with `nodemon`
-- Frontend uses Vite for fast refresh
+### Prerequisites
+- Node.js (v18+)
+- PostgreSQL
+- npm or yarn
+
+### Installation
+1. Clone and install dependencies:
+```bash
+git clone <repository-url>
+cd fstack
+npm install
+```
+
+2. Set up database:
+```bash
+cd server
+npx prisma migrate dev
+```
+
+3. Start development servers:
+```bash
+npm run dev
+```
+
+### Available Scripts
+- `npm run dev` - Start frontend & backend
+- `npm run dev:fe` - Frontend only
+- `npm run dev:be` - Backend only
+- `npm run build` - Production build
+- `npm run preview` - Preview build
+
+### Database Management
+Launch Prisma Studio:
+```bash
+npx prisma studio
+```
+Access at http://localhost:5555
+
+## Project Structure
+```
+fstack/
+├── src/              # Frontend React code
+│   ├── components/   # React components
+│   ├── App.jsx      # Main React component
+│   └── main.jsx     # Entry point
+├── server/          # Backend
+│   ├── src/         # Express server code
+│   └── prisma/      # Database schema & migrations
+└── public/          # Static assets
+```
+
+## Contributing
+1. Fork the repository
+2. Create feature branch
+3. Commit changes
+4. Push to branch
+5. Open Pull Request
 
 ## License
-
 MIT
-
----
-
-**Feel free to contribute or open issues!**

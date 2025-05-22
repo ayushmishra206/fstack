@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import AuthForm from './components/AuthForm';
@@ -7,15 +7,29 @@ import Profile from './components/Profile';
 
 function App() {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleLogin = (token, user) => {
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+    setLoading(false);
+  }, []);
+
+  const handleLogin = (user) => {
     setUser(user);
-    // Optionally store token in state if you implement JWT later
+    localStorage.setItem('user', JSON.stringify(user));
   };
 
   const handleLogout = () => {
     setUser(null);
+    localStorage.removeItem('user');
   };
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   if (!user) {
     return (
