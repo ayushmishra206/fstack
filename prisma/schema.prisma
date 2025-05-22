@@ -9,18 +9,24 @@ datasource db {
 
 model User {
   id        Int      @id @default(autoincrement())
-  name      String
   email     String   @unique
   password  String
-  bio       String? // Optional
-  avatar    String? // Optional
+  name      String   @db.VarChar(50)
+  username  String?  @unique @db.VarChar(15)
+  bio       String?  @db.Text
+  avatar    String?  @db.Text
+  banner    String?  @db.Text
+  location  String?  @db.VarChar(30)
+  website   String?  @db.Text
   createdAt DateTime @default(now())
+  followers User[]   @relation("UserFollows")
+  following User[]   @relation("UserFollows")
   posts     Post[]
 }
 
 model Post {
   id        Int      @id @default(autoincrement())
-  content   String
+  content   String   @db.Text
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
   userId    Int

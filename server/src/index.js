@@ -75,18 +75,73 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// Profile update endpoint
+// Update profile endpoint
 app.put('/api/profile/:id', async (req, res) => {
   const { id } = req.params;
-  const { name, bio, avatar } = req.body;
+  const { name, bio, avatar, location, website, username, banner } = req.body;
+  
   try {
-    const user = await prisma.user.update({
+    logger.info('Profile update attempt', { userId: id, updates: req.body });
+
+    // Validate required fields
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+
+    // Clean up data - convert empty strings to null
+    const cleanData = {
+      name,
+      username: username || null,
+      bio: bio || null,
+      avatar: avatar || null,
+      banner: banner || null,
+      location: location || null,
+      website: website || null
+    };
+
+    // Check username uniqueness only if it's being changed
+    if (username) {
+      const existingUser = await prisma.user.findUnique({
+        where: { username },
+        select: { id: true }
+      });
+      if (existingUser && existingUser.id !== Number(id)) {
+        return res.status(400).json({ error: 'Username already taken' });
+      }
+    }
+
+    const updatedUser = await prisma.user.update({
       where: { id: Number(id) },
-      data: { name, bio, avatar }
+      data: cleanData,
+      include: {
+        _count: {
+          select: {
+            followers: true,
+            following: true,
+            posts: true
+          }
+        },
+        followers: {
+          select: { id: true, name: true, avatar: true }
+        },
+        following: {
+          select: { id: true, name: true, avatar: true }
+        }
+      }
     });
-    res.json({ id: user.id, name: user.name, email: user.email, bio: user.bio, avatar: user.avatar });
+
+    const { password: _, ...userWithoutPassword } = updatedUser;
+    res.json(userWithoutPassword);
   } catch (err) {
-    res.status(400).json({ error: 'Update failed.' });
+    logger.error('Profile update error', { 
+      userId: id, 
+      error: err.message, 
+      stack: err.stack 
+    });
+    res.status(400).json({ 
+      error: 'Update failed', 
+      details: err.message 
+    });
   }
 });
 
@@ -130,6 +185,120 @@ app.get('/api/posts', async (req, res) => {
   } catch (err) {
     console.error('Error fetching posts:', err);
     res.status(500).json({ error: 'Failed to fetch posts', details: err.message });
+  }
+});
+
+// Follow user endpoint
+app.post('/api/users/:id/follow', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { followerId } = req.body;
+    
+    const user = await prisma.user.update({
+      where: { id: Number(id) },
+      data: {
+        followers: {
+          connect: { id: Number(followerId) }
+        }
+      },
+      include: {
+        followers: true,
+        following: true
+      }
+    });
+    
+    logger.info('User followed', { userId: id, followerId });
+    res.json(user);
+  } catch (err) {
+    logger.error('Follow error', { error: err.message });
+    res.status(400).json({ error: 'Failed to follow user' });
+  }
+});
+
+// Unfollow user endpoint
+app.post('/api/users/:id/unfollow', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { followerId } = req.body;
+    
+    const user = await prisma.user.update({
+      where: { id: Number(id) },
+      data: {
+        followers: {
+          disconnect: { id: Number(followerId) }
+        }
+      },
+      include: {
+        followers: true,
+        following: true
+      }
+    });
+    
+    logger.info('User unfollowed', { userId: id, followerId });
+    res.json(user);
+  } catch (err) {
+    logger.error('Unfollow error', { error: err.message });
+    res.status(400).json({ error: 'Failed to unfollow user' });
+  }
+});
+
+// Get all users with follow info
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      include: {
+        followers: true,
+        following: true,
+        _count: {
+          select: {
+            followers: true,
+            following: true
+          }
+        }
+      }
+    });
+    res.json(users.map(({ password, ...user }) => user));
+  } catch (err) {
+    logger.error('Get users error', { error: err.message });
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// Get user profile endpoint
+app.get('/api/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await prisma.user.findUnique({
+      where: { id: Number(id) },
+      include: {
+        _count: {
+          select: {
+            followers: true,
+            following: true,
+            posts: true
+          }
+        },
+        posts: {
+          orderBy: { createdAt: 'desc' }
+        },
+        followers: {
+          select: { id: true, name: true, avatar: true, username: true }
+        },
+        following: {
+          select: { id: true, name: true, avatar: true, username: true }
+        }
+      }
+    });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const { password: _, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
+  } catch (err) {
+    logger.error('Get user profile error', { error: err.message });
+    res.status(500).json({ error: 'Failed to fetch user profile' });
   }
 });
 

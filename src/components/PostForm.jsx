@@ -27,23 +27,35 @@ export default function PostForm({ user, onPost }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-8 bg-white rounded-lg shadow p-4">
-      <textarea
-        className="w-full border rounded p-3 focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-        value={content}
-        onChange={e => setContent(e.target.value)}
-        placeholder="What's on your mind?"
-        rows={3}
-        disabled={isLoading}
-      />
-      <div className="flex justify-end mt-2">
-        <button 
-          type="submit"
-          disabled={isLoading || !content.trim()}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-        >
-          {isLoading ? "Posting..." : "Post"}
-        </button>
+    <form onSubmit={handleSubmit} className="p-4 border-b border-default bg-white">
+      <div className="flex gap-4">
+        <img
+          src={user.avatar || '/default-avatar.png'}
+          alt=""
+          className="w-12 h-12 rounded-full shrink-0"
+        />
+        <div className="flex-1 space-y-4">
+          <textarea
+            className="w-full min-h-[120px] text-lg border-none focus:ring-0 resize-none placeholder:text-gray-500"
+            value={content}
+            onChange={e => setContent(e.target.value)}
+            placeholder="What's on your mind?"
+            maxLength={280}
+            disabled={isLoading}
+          />
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-secondary">
+              {content.length}/280 characters
+            </span>
+            <button 
+              type="submit"
+              disabled={isLoading || !content.trim()}
+              className="btn-primary px-6 py-2 disabled:opacity-50"
+            >
+              {isLoading ? "Posting..." : "Post"}
+            </button>
+          </div>
+        </div>
       </div>
     </form>
   );

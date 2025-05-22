@@ -4,6 +4,8 @@ import Dashboard from './components/Dashboard';
 import AuthForm from './components/AuthForm';
 import LoginIllustration from './components/LoginIllustration';
 import Profile from './components/Profile';
+import FollowList from './components/FollowList';
+import './styles/theme.css';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -27,6 +29,11 @@ function App() {
     localStorage.removeItem('user');
   };
 
+  const handleProfileUpdate = (updatedUser) => {
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
@@ -48,7 +55,15 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Dashboard user={user} onLogout={handleLogout} />} />
-        <Route path="/profile" element={<Profile user={user} onUpdate={setUser} />} />
+        <Route path="/profile" element={
+          <Profile 
+            user={user} 
+            onUpdate={handleProfileUpdate} 
+            onLogout={handleLogout} 
+          />
+        } />
+        <Route path="/:userId/followers" element={<FollowList user={user} type="followers" onLogout={handleLogout} />} />
+        <Route path="/:userId/following" element={<FollowList user={user} type="following" onLogout={handleLogout} />} />
       </Routes>
     </Router>
   );

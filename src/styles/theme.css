@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --primary: #1d9bf0;
+    --primary-hover: #1a8cd8;
+    --background: #ffffff;
+    --text: #0f1419;
+    --text-secondary: #536471;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    background-color: var(--primary);
+    color: #ffffff;
+    font-weight: 600;
+    border-radius: 9999px;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+
+  .btn-primary:hover {
+    background-color: var(--primary-hover);
+  }
+
+  .border-default {
+    border-color: #e5e7eb;
+  }
+
+  .text-secondary {
+    color: var(--text-secondary);
+  }
+}
+
+.input-area {
+  @apply w-full border border-[--input-border] rounded-lg p-3 focus:border-[--input-focus] focus:ring-1 focus:ring-[--input-focus] transition-all resize-none;
+}
+
+.nav-container {
+  @apply fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-[--nav-border] z-50;
+}
+
+.nav-content {
+  @apply max-w-6xl mx-auto px-4 h-16 flex items-center justify-between;
+}
