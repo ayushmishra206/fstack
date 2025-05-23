@@ -34,9 +34,9 @@ export default function PostForm({ user, onPost }) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-4 mb-4">
+    <div className="bg-white rounded-xl shadow max-w-2xl mx-auto mb-4 px-4">
       <form onSubmit={handleSubmit}>
-        <div className="flex space-x-3">
+        <div className="flex space-x-3 py-4">
           <img
             src={user.avatar || '/default-avatar.png'}
             alt=""
@@ -71,8 +71,8 @@ export default function PostForm({ user, onPost }) {
                 ))}
               </div>
             )}
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200">
-              <div className="flex space-x-2">
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-200">
+              <div className="flex items-center space-x-2">
                 <ImageUploadButton 
                   onUpload={url => setImages([...images, url])}
                   loading={isLoading}
@@ -81,7 +81,7 @@ export default function PostForm({ user, onPost }) {
               <button 
                 type="submit"
                 disabled={isLoading || !content.trim()}
-                className="bg-[--primary] text-white font-semibold px-6 py-2 rounded-full disabled:opacity-50 transition-opacity hover:bg-[--primary]/90"
+                className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-2.5 rounded-full disabled:opacity-50 transition-all"
               >
                 {isLoading ? "Posting..." : "Post"}
               </button>
