@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function Post({ post }) {
   return (
-    <div className="p-4 border-b">
+    <div className="p-4">
       <div className="flex space-x-3">
         <img
           src={post.user.avatar || '/default-avatar.png'}
@@ -22,7 +22,11 @@ export default function Post({ post }) {
           </div>
           <p className="mt-2">{post.content}</p>
           {post.images && post.images.length > 0 && (
-            <div className={`mt-3 grid gap-2 ${post.images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            <div
+              className={`mt-4 grid gap-2 ${
+                post.images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'
+              }`}
+            >
               {post.images.map((image, index) => (
                 <img
                   key={index}
