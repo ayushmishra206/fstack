@@ -8,26 +8,44 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  name      String   @db.VarChar(50)
-  username  String?  @unique @db.VarChar(15)
-  bio       String?  @db.Text
-  avatar    String?  @db.Text
-  banner    String?  @db.Text
-  location  String?  @db.VarChar(30)
-  website   String?  @db.Text
-  createdAt DateTime @default(now())
-  followers User[]   @relation("UserFollows")
-  following User[]   @relation("UserFollows")
-  posts     Post[]
+  id                Int            @id @default(autoincrement())
+  email             String         @unique
+  password          String
+  name              String         @db.VarChar(50)
+  username          String?        @unique @db.VarChar(15)
+  bio               String?        @db.Text
+  avatar            String?        @db.Text
+  banner            String?        @db.Text
+  location          String?        @db.VarChar(30)
+  website           String?        @db.Text
+  createdAt         DateTime       @default(now())
+  followers         User[]         @relation("UserFollows")
+  following         User[]         @relation("UserFollows")
+  posts             Post[]
+  notifications     Notification[] @relation("UserNotifications")
+  sentNotifications Notification[] @relation("NotificationSender")
 }
 
 model Post {
+  id            Int            @id @default(autoincrement())
+  content       String         @db.Text
+  createdAt     DateTime       @default(now())
+  user          User           @relation(fields: [userId], references: [id])
+  userId        Int
+  images        String[]
+  notifications Notification[]
+}
+
+model Notification {
   id        Int      @id @default(autoincrement())
-  content   String   @db.Text
+  type      String // 'follow', 'like', 'comment'
+  message   String
+  read      Boolean  @default(false)
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int
+  userId    Int // User receiving notification
+  senderId  Int // User causing notification
+  postId    Int? // Optional post reference
+  user      User     @relation("UserNotifications", fields: [userId], references: [id])
+  sender    User     @relation("NotificationSender", fields: [senderId], references: [id])
+  post      Post?    @relation(fields: [postId], references: [id])
 }

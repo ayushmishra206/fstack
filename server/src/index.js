@@ -4,6 +4,10 @@ import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 import logger from './utils/logger.js';
+import multer from 'multer';
+import path from 'path';
+import rateLimit from 'express-rate-limit';
+import { validateImage, generateSecureFilename } from './utils/imageUtils.js';
 
 dotenv.config();
 const prisma = new PrismaClient({
@@ -17,6 +21,42 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Rate limiting for uploads
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // limit each IP to 10 uploads per windowMs
+  message: 'Too many uploads from this IP, please try again later'
+});
+
+// Configure multer with security
+const storage = multer.diskStorage({
+  destination: './uploads/',
+  filename: (req, file, cb) => {
+    cb(null, generateSecureFilename(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    try {
+      validateImage(file);
+      cb(null, true);
+    } catch (err) {
+      cb(new Error(err.message));
+    }
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB
+  }
+});
+
+// Serve uploaded files statically
+app.use('/uploads', (req, res, next) => {
+  // Optional: Add authentication check here
+  next();
+}, express.static('uploads'));
 
 // Health check
 app.get('/', (req, res) => res.send('API running!'));
@@ -329,6 +369,29 @@ app.get('/api/search', async (req, res) => {
   } catch (err) {
     logger.error('Search error', { error: err.message });
     res.status(500).json({ error: 'Search failed' });
+  }
+});
+
+// Image upload endpoint with rate limiting
+app.post('/api/upload', uploadLimiter, upload.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      throw new Error('No file uploaded');
+    }
+    
+    const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    
+    // Log upload for monitoring
+    logger.info('Image uploaded', {
+      userId: req.body.userId,
+      filename: req.file.filename,
+      size: req.file.size
+    });
+
+    res.json({ url: imageUrl });
+  } catch (err) {
+    logger.error('Upload error:', err);
+    res.status(400).json({ error: err.message });
   }
 });
 

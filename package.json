@@ -19,6 +19,10 @@
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "express-rate": "^0.0.1",
+    "express-rate-limit": "^6.7.0",
+    "limit": "^0.0.1",
+    "multer": "^2.0.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.0",
@@ -38,5 +42,8 @@
     "nodemon": "^3.1.10",
     "prisma": "^6.8.2",
     "vite": "^6.3.5"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   }
 }
