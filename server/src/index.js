@@ -31,7 +31,9 @@ const uploadLimiter = rateLimit({
 
 // Configure multer with security
 const storage = multer.diskStorage({
-  destination: './uploads/',
+  destination: (req, file, cb) => {
+    cb(null, './uploads/posts/');
+  },
   filename: (req, file, cb) => {
     cb(null, generateSecureFilename(file.originalname));
   }
@@ -187,33 +189,76 @@ app.put('/api/profile/:id', async (req, res) => {
 
 // Create post endpoint
 app.post('/api/posts', async (req, res) => {
-  const { userId, content } = req.body;
+  const { userId, content, images = [] } = req.body;
   try {
+    // Convert relative image paths to absolute URLs
+    const fullImageUrls = images.map(image => {
+      if (image.startsWith('/uploads/')) {
+        return `${req.protocol}://${req.get('host')}${image}`;
+      }
+      return image;
+    });
+
     const post = await prisma.post.create({
       data: {
         content,
-        userId: Number(userId)
+        userId: Number(userId),
+        images: fullImageUrls
       },
-      include: {
-        user: true // Include user data in response
-      }
-    });
-    res.json(post);
-  } catch (err) {
-    res.status(400).json({ error: 'Failed to create post' });
-  }
-});
-
-// Get all posts endpoint
-app.get('/api/posts', async (req, res) => {
-  try {
-    const posts = await prisma.post.findMany({
-      include: {
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+        images: true,
+        userId: true,
         user: {
           select: {
             id: true,
             name: true,
-            avatar: true
+            avatar: true,
+            username: true
+          }
+        }
+      }
+    });
+
+    // Create notifications after post is created
+    await prisma.notification.createMany({
+      data: (await prisma.user.findUnique({
+        where: { id: Number(userId) },
+        include: { followers: true }
+      })).followers.map(follower => ({
+        type: 'POST',
+        message: 'shared a new post',
+        userId: follower.id,
+        senderId: Number(userId),
+        postId: post.id,
+        read: false
+      }))
+    });
+
+    res.json(post);
+  } catch (err) {
+    logger.error('Post creation error:', err);
+    res.status(400).json({ error: 'Failed to create post' });
+  }
+});
+
+app.get('/api/posts', async (req, res) => {
+  try {
+    const posts = await prisma.post.findMany({
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+        images: true,
+        userId: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            username: true
           }
         }
       },
@@ -234,23 +279,33 @@ app.post('/api/users/:id/follow', async (req, res) => {
     const { id } = req.params;
     const { followerId } = req.body;
     
-    const user = await prisma.user.update({
-      where: { id: Number(id) },
-      data: {
-        followers: {
-          connect: { id: Number(followerId) }
+    const [user, notification] = await prisma.$transaction([
+      prisma.user.update({
+        where: { id: Number(id) },
+        data: {
+          followers: {
+            connect: { id: Number(followerId) }
+          }
+        },
+        include: {
+          followers: true,
+          following: true
         }
-      },
-      include: {
-        followers: true,
-        following: true
-      }
-    });
+      }),
+      prisma.notification.create({
+        data: {
+          type: 'FOLLOW',
+          message: 'started following you',
+          userId: Number(id),
+          senderId: Number(followerId),
+          read: false
+        }
+      })
+    ]);
     
-    logger.info('User followed', { userId: id, followerId });
     res.json(user);
   } catch (err) {
-    logger.error('Follow error', { error: err.message });
+    logger.error('Follow error:', err);
     res.status(400).json({ error: 'Failed to follow user' });
   }
 });
@@ -392,6 +447,80 @@ app.post('/api/upload', uploadLimiter, upload.single('image'), (req, res) => {
   } catch (err) {
     logger.error('Upload error:', err);
     res.status(400).json({ error: err.message });
+  }
+});
+
+// Get notifications with proper filters
+app.get('/api/notifications/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { filter = 'all' } = req.query;
+    
+    const where = {
+      userId: Number(userId),
+      ...(filter === 'unread' && { read: false }),
+      ...(filter === 'mentions' && { type: 'mention' })
+    };
+
+    const notifications = await prisma.notification.findMany({
+      where,
+      include: {
+        sender: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            avatar: true
+          }
+        },
+        post: {
+          select: {
+            id: true,
+            content: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    res.json(notifications);
+  } catch (err) {
+    logger.error('Get notifications error:', err);
+    res.status(500).json({ error: 'Failed to fetch notifications' });
+  }
+});
+
+// Mark notification as read
+app.put('/api/notifications/:id/read', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const notification = await prisma.notification.update({
+      where: { id: Number(id) },
+      data: { read: true }
+    });
+    res.json(notification);
+  } catch (err) {
+    logger.error('Mark notification read error:', err);
+    res.status(400).json({ error: 'Failed to mark notification as read' });
+  }
+});
+
+// Get unread count with proper error handling
+app.get('/api/notifications/:userId/unread/count', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const count = await prisma.notification.count({
+      where: {
+        userId: Number(userId),
+        read: false
+      }
+    });
+    res.json({ count });
+  } catch (err) {
+    logger.error('Get notification count error:', err);
+    res.status(500).json({ error: 'Failed to fetch notification count' });
   }
 });
 

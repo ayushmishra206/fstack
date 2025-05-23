@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { API_URL } from '../utils/config';
+import Post from './Post';
 
 export default function Feed() {
   const [posts, setPosts] = useState([]);
@@ -52,24 +53,7 @@ export default function Feed() {
   return (
     <div className="space-y-4">
       {posts.map(post => (
-        <article key={post.id} className="bg-white rounded-lg shadow p-4">
-          <div className="flex items-center mb-2">
-            {post.user?.avatar && (
-              <img 
-                src={post.user.avatar} 
-                alt=""
-                className="w-10 h-10 rounded-full mr-3"
-              />
-            )}
-            <div>
-              <h3 className="font-semibold">{post.user?.name || "Unknown User"}</h3>
-              <time className="text-sm text-gray-500">
-                {new Date(post.createdAt).toLocaleString()}
-              </time>
-            </div>
-          </div>
-          <p className="mt-2">{post.content}</p>
-        </article>
+        <Post key={post.id} post={post} />
       ))}
     </div>
   );

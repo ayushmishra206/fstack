@@ -30,22 +30,29 @@ model Post {
   id            Int            @id @default(autoincrement())
   content       String         @db.Text
   createdAt     DateTime       @default(now())
-  user          User           @relation(fields: [userId], references: [id])
   userId        Int
   images        String[]
+  user          User           @relation(fields: [userId], references: [id])
   notifications Notification[]
 }
 
+enum NotificationType {
+  FOLLOW
+  POST
+  LIKE
+  COMMENT
+}
+
 model Notification {
-  id        Int      @id @default(autoincrement())
-  type      String // 'follow', 'like', 'comment'
+  id        Int              @id @default(autoincrement())
+  type      NotificationType
   message   String
-  read      Boolean  @default(false)
-  createdAt DateTime @default(now())
-  userId    Int // User receiving notification
-  senderId  Int // User causing notification
-  postId    Int? // Optional post reference
-  user      User     @relation("UserNotifications", fields: [userId], references: [id])
-  sender    User     @relation("NotificationSender", fields: [senderId], references: [id])
-  post      Post?    @relation(fields: [postId], references: [id])
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  userId    Int
+  senderId  Int
+  postId    Int?
+  user      User             @relation("UserNotifications", fields: [userId], references: [id])
+  sender    User             @relation("NotificationSender", fields: [senderId], references: [id])
+  post      Post?            @relation(fields: [postId], references: [id])
 }
