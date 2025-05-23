@@ -34,53 +34,61 @@ export default function PostForm({ user, onPost }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 border-b border-default">
-      <div className="flex">
-        <img
-          src={user.avatar || '/default-avatar.png'}
-          alt=""
-          className="w-12 h-12 rounded-full mr-4"
-        />
-        <div className="flex-1">
-          <textarea
-            className="w-full border-none focus:ring-0 text-xl resize-none"
-            value={content}
-            onChange={e => setContent(e.target.value)}
-            placeholder="What's happening?"
-            rows={3}
-            disabled={isLoading}
+    <div className="bg-white rounded-lg shadow p-4 mb-4">
+      <form onSubmit={handleSubmit}>
+        <div className="flex space-x-3">
+          <img
+            src={user.avatar || '/default-avatar.png'}
+            alt=""
+            className="w-10 h-10 rounded-full object-cover"
           />
-          {images.length > 0 && (
-            <div className="flex gap-2 my-2">
-              {images.map((url, index) => (
-                <div key={url} className="relative">
-                  <img src={url} alt="" className="w-24 h-24 object-cover rounded" />
-                  <button
-                    type="button"
-                    onClick={() => setImages(images.filter((_, i) => i !== index))}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-          <div className="flex justify-between items-center mt-2">
-            <ImageUploadButton 
-              onUpload={url => setImages([...images, url])}
-              loading={isLoading}
+          <div className="flex-1">
+            <textarea
+              className="w-full border-0 focus:ring-0 text-gray-900 text-lg resize-none bg-transparent px-0"
+              value={content}
+              onChange={e => setContent(e.target.value)}
+              placeholder="What's happening?"
+              rows={3}
+              disabled={isLoading}
             />
-            <button 
-              type="submit"
-              disabled={isLoading || !content.trim()}
-              className="btn-primary px-5 py-2 disabled:opacity-50"
-            >
-              {isLoading ? "Posting..." : "Post"}
-            </button>
+            {images.length > 0 && (
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {images.map((url, index) => (
+                  <div key={url} className="relative pt-[56.25%] rounded-xl overflow-hidden bg-gray-100">
+                    <img 
+                      src={url} 
+                      alt="" 
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setImages(images.filter((_, i) => i !== index))}
+                      className="absolute top-2 right-2 bg-black/50 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-black/75"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200">
+              <div className="flex space-x-2">
+                <ImageUploadButton 
+                  onUpload={url => setImages([...images, url])}
+                  loading={isLoading}
+                />
+              </div>
+              <button 
+                type="submit"
+                disabled={isLoading || !content.trim()}
+                className="bg-[--primary] text-white font-semibold px-6 py-2 rounded-full disabled:opacity-50 transition-opacity hover:bg-[--primary]/90"
+              >
+                {isLoading ? "Posting..." : "Post"}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 }

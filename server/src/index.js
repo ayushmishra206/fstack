@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 import logger from './utils/logger.js';
 import multer from 'multer';
+import fs from 'fs';
 import path from 'path';
 import rateLimit from 'express-rate-limit';
 import { validateImage, generateSecureFilename } from './utils/imageUtils.js';
@@ -29,10 +30,21 @@ const uploadLimiter = rateLimit({
   message: 'Too many uploads from this IP, please try again later'
 });
 
+// Add these constants after imports
+const TEMP_UPLOAD_DIR = './uploads/temp';
+const PERMANENT_UPLOAD_DIR = './uploads/posts';
+
+// Ensure directories exist
+[TEMP_UPLOAD_DIR, PERMANENT_UPLOAD_DIR].forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
+
 // Configure multer with security
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, './uploads/posts/');
+    cb(null, TEMP_UPLOAD_DIR);
   },
   filename: (req, file, cb) => {
     cb(null, generateSecureFilename(file.originalname));
@@ -191,19 +203,27 @@ app.put('/api/profile/:id', async (req, res) => {
 app.post('/api/posts', async (req, res) => {
   const { userId, content, images = [] } = req.body;
   try {
-    // Convert relative image paths to absolute URLs
-    const fullImageUrls = images.map(image => {
-      if (image.startsWith('/uploads/')) {
-        return `${req.protocol}://${req.get('host')}${image}`;
-      }
-      return image;
-    });
+    const movedImages = await Promise.all(
+      images.map(async (image) => {
+        if (image.startsWith('/uploads/temp/')) {
+          const fileName = path.basename(image);
+          const tempPath = path.join('.', image);
+          const newPath = path.join(PERMANENT_UPLOAD_DIR, fileName);
+          
+          if (fs.existsSync(tempPath)) {
+            await fs.promises.rename(tempPath, newPath);
+            return `${req.protocol}://${req.get('host')}/uploads/posts/${fileName}`;
+          }
+        }
+        return image;
+      })
+    );
 
     const post = await prisma.post.create({
       data: {
         content,
         userId: Number(userId),
-        images: fullImageUrls
+        images: movedImages
       },
       select: {
         id: true,
@@ -434,13 +454,14 @@ app.post('/api/upload', uploadLimiter, upload.single('image'), (req, res) => {
       throw new Error('No file uploaded');
     }
     
-    const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    const relativePath = path.relative('.', req.file.path).replace(/\\/g, '/');
+    const imageUrl = `${req.protocol}://${req.get('host')}/${relativePath}`;
     
-    // Log upload for monitoring
     logger.info('Image uploaded', {
       userId: req.body.userId,
       filename: req.file.filename,
-      size: req.file.size
+      size: req.file.size,
+      path: relativePath
     });
 
     res.json({ url: imageUrl });
@@ -534,6 +555,26 @@ app.use((err, req, res, next) => {
   });
   res.status(500).json({ error: 'Internal server error' });
 });
+
+// Add cleanup for temp files (run every hour)
+setInterval(async () => {
+  try {
+    const files = await fs.promises.readdir(TEMP_UPLOAD_DIR);
+    const now = Date.now();
+    
+    for (const file of files) {
+      const filePath = path.join(TEMP_UPLOAD_DIR, file);
+      const stats = await fs.promises.stat(filePath);
+      
+      // Remove files older than 1 hour
+      if (now - stats.mtime.getTime() > 3600000) {
+        await fs.promises.unlink(filePath);
+      }
+    }
+  } catch (err) {
+    logger.error('Temp file cleanup error:', err);
+  }
+}, 3600000);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
