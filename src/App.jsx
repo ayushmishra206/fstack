@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import AuthForm from './components/AuthForm';
 import LoginIllustration from './components/LoginIllustration';
 import Profile from './components/Profile';
 import FollowList from './components/FollowList';
+import Notifications from './components/Notifications';
 import './styles/theme.css';
 
 function App() {
@@ -52,7 +53,7 @@ function App() {
   }
 
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route path="/" element={<Dashboard user={user} onLogout={handleLogout} />} />
         <Route path="/profile" element={
@@ -64,6 +65,16 @@ function App() {
         } />
         <Route path="/:userId/followers" element={<FollowList user={user} type="followers" onLogout={handleLogout} />} />
         <Route path="/:userId/following" element={<FollowList user={user} type="following" onLogout={handleLogout} />} />
+        <Route 
+          path="/notifications" 
+          element={
+            user ? (
+              <Notifications user={user} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
       </Routes>
     </Router>
   );
