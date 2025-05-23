@@ -302,6 +302,36 @@ app.get('/api/users/:id', async (req, res) => {
   }
 });
 
+// Search users endpoint
+app.get('/api/search', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) return res.json([]);
+
+    const users = await prisma.user.findMany({
+      where: {
+        OR: [
+          { name: { contains: q, mode: 'insensitive' } },
+          { username: { contains: q, mode: 'insensitive' } },
+        ],
+      },
+      take: 10,
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        avatar: true,
+        bio: true,
+      },
+    });
+
+    res.json(users);
+  } catch (err) {
+    logger.error('Search error', { error: err.message });
+    res.status(500).json({ error: 'Search failed' });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   logger.error('Unhandled error', {
