@@ -2,6 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { API_URL } from '../utils/config';
 
+/**
+ * Renders a user search input with live results and a dropdown list.
+ *
+ * Allows users to search for other users by name or username. As the user types, matching results are fetched from the API and displayed in a dropdown. Clicking outside the component or selecting a result closes the dropdown. Each result links to the corresponding user's profile.
+ *
+ * @returns {JSX.Element} The search input component with live user results.
+ */
 export default function Search() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
