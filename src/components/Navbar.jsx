@@ -2,6 +2,11 @@ import React from "react";
 import { Link } from "react-router-dom";
 import Search from "./Search";
 
+/**
+ * Renders the main navigation bar with site branding, search, navigation links, and a logout button.
+ *
+ * @param {{ onLogout: () => void }} props - Callback invoked when the logout button is clicked.
+ */
 export default function Navbar({ onLogout }) {
   return (
     <nav className="nav-container">
